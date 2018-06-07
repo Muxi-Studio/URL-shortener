@@ -61,6 +61,7 @@ class User(db.Model):
     __table_args__ = {"mysql_charset": "utf8"}
     email=db.Column(db.String(20))
     password=db.Column(db.String(128))
+    is_confirmed=db.Column(db.Boolean,default=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     urlmaps = db.relationship('URLMapping', backref='user',
                 lazy='dynamic', cascade='all')
