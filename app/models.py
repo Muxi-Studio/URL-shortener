@@ -125,6 +125,29 @@ class User(db.Model):
         return '<User %r>' % self.email
 
 
+class AnonymousUser():
+    """
+    AnonymousUser: 匿名用户
+    :func can:
+        权限判断, 匿名用户没有任何权限
+    :func is_administrator:
+        是否是管理员, 返回False
+    :generate_auth_token:
+        生成验证token, 匿名用户没有id, 不生成token
+    """
+    __table_args__ = {'mysql_charset': 'utf8'}
+
+    def can(self, permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+    def generate_auth_token(self, ):
+        return None
+
+
+
 class URLMapping(db.Model):
     __tablename__ = "urlmaps"
     __table_args__ = {"mysql_charset": "utf8"}
