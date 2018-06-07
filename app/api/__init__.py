@@ -1,3 +1,4 @@
 from flask import Blueprint
-service=Blueprint("api",__name__)
-from . import long2short
+api=Blueprint("api",__name__)
+
+from . import long2short, statistics, urlmap, user

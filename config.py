@@ -11,7 +11,7 @@ class Config (object):
 class DevelopmentConfig(Config):
     DEBUG=True
     SQLALCHEMY_DATABASE_URI=os.environ.get("DEV_DATABASE_URL") or \
-        "mysql+pymysql://root:pqc19960320@120.77.220.239:32770/SimplePing"
+        "mysql+pymysql://root:pqc19960320@localhost:3306/shortURL"
 
 config={
     "default":DevelopmentConfig
