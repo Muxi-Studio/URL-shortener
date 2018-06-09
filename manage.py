@@ -1,3 +1,4 @@
+#coding: utf-8
 """
     manage.py
     ~~~~~~~~~
@@ -8,7 +9,7 @@
       -- python manage.py db migrate
       -- python manage.py db upgrade
       -- python manage.py runserver
-      -- python manage.py test
+      -- python manage.py tests
       -- python manage.py adduser (username) (email)
       -- python manage.py freeze
 """
@@ -45,7 +46,7 @@ def test(coverage=True):
         os.environ['APP_COVERAGE'] = '1'
         os.execvp(sys.executable, [sys.executable] + sys.argv)
     import unittest
-    tests = unittest.TestLoader().discover('test')
+    tests = unittest.TestLoader().discover('tests')
     unittest.TextTestRunner(verbosity=2).run(tests)
     if COV:
         COV.stop()
@@ -54,8 +55,6 @@ def test(coverage=True):
         COV.report()
         COV.erase()
     sys.exit(0)
-
-
 
 
 

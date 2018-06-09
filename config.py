@@ -59,7 +59,7 @@ testing configuration
 class TestingConfig(Config):
     """testing configuration"""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "data-test.sqlite")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "data-tests.sqlite")
     WTF_CSRF_ENABLED = False
 
 

@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-    test_api.py
+    tests.py
     ```````````
     : api 功能测试
 """
@@ -68,7 +68,7 @@ class APITestCase(unittest.TestCase):
 
     def test_admin_token(self):
         """
-        test admin user token
+        tests admin user token
         """
         u = User(
             email='admin@admin.com',
@@ -91,7 +91,7 @@ class APITestCase(unittest.TestCase):
 
     def test_normal_token(self):
         """
-        test normal user token
+        tests normal user token
         """
         u = User(
             email='3480437308@qq.com',
@@ -116,7 +116,7 @@ class APITestCase(unittest.TestCase):
 
     def test_404(self):
         """
-        test 404 response
+        tests 404 response
         """
         res = self.client.get(
             '/wrong/url',
@@ -126,7 +126,7 @@ class APITestCase(unittest.TestCase):
 
     def test_401(self):
         """
-        test 401 response
+        tests 401 response
         """
         res = self.client.put(url_for('api.user',id=1))
         self.assertTrue(res.status_code == 401)
