@@ -59,3 +59,8 @@ def get_token():
     return jsonify({
         'token': g.current_user.generate_auth_token()
     })
+
+
+@auth.error_handler
+def auth_error():
+    return jsonify({"message":"auth failed"}), 403
