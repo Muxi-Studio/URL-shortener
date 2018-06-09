@@ -1,3 +1,4 @@
+# coding: utf-8
 import base64
 from app import db
 from flask import current_app
@@ -21,13 +22,13 @@ class Permission:
 class Role(db.Model):
     """
     Role: 用户角色
-    1. User: COMMENT id=3
-    2. Moderator: MODERATE_COMMENTS id=2
-    3. Administrator: ADMINISTER  id=1
+    1. User: COMMENT
+    2. Moderator: MODERATE_COMMENTS
+    3. Administrator: ADMINISTER
     :func insert_roles: 创建用户角色, 默认是普通用户
     """
-    __table_args__ = {'mysql_charset': 'utf8'}
     __tablename__ = 'roles'
+    __table_args__ = {'mysql_charset': 'utf8'}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
@@ -37,25 +38,29 @@ class Role(db.Model):
 
     @staticmethod
     def insert_roles():
-        roles = {
-            'User': (Permission.COMMENT, True),
-            'Moderator': (Permission.COMMENT |
-                          Permission.MODERATE_COMMENTS, False),
-            'Administrator': (
+        """
+        由于角色比较少，这里重点需要保证各个角色添加到数据库
+        中的顺序一致，所以这里使用的是list，而没有用dict
+        """
+        roles = [
+            ['User',(Permission.COMMENT, True)],
+            ['Moderator', (Permission.COMMENT |
+                          Permission.MODERATE_COMMENTS, False)],
+            ['Administrator', (
                 Permission.COMMENT |
                 Permission.MODERATE_COMMENTS |
                 Permission.ADMINISTER,
                 False
-            )
-        }
+            )]
+        ]
         for r in roles:
-            role = Role.query.filter_by(name=r).first()
+            role = Role.query.filter_by(name=r[0]).first()
             if role is None:
-                role = Role(name=r)
-            role.permissions = roles[r][0]
-            role.default = roles[r][1]
+                role = Role(name=r[0])
+            role.permissions = r[1][0]
+            role.default = r[1][1]
             db.session.add(role)
-        db.session.commit()
+            db.session.commit()
 
     def __repr__(self):
         return '<Role %r>' % self.name

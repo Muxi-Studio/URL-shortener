@@ -12,7 +12,7 @@
 """
 
 from functools import wraps
-from flask import abort, request, g, redirect, url_for
+from flask import abort, request, g
 from app.models import User,Permission
 import base64
 

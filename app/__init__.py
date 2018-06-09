@@ -1,6 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
+import os
 from flask import Flask
 from config import config
+from flask_sqlalchemy import SQLAlchemy
 
 db=SQLAlchemy()
 
@@ -17,3 +18,6 @@ def create_app(config_key):
     app.register_blueprint(api_blueprint, url_prefix="/api")
 
     return app
+
+#the project app
+app = create_app(config_key = os.getenv('APP_CONFIG') or 'default')

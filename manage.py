@@ -14,14 +14,20 @@
 """
 
 import os
-from app import create_app,db
+from app import app,db
 from flask_script import Manager,Shell
 from app.models import Role,User,URLMapping,Statistics
 from flask_migrate import Migrate,MigrateCommand
 
-app=create_app("default")
 manager=Manager(app)
 migrate=Migrate(app,db)
+
+COV = None
+if os.environ.get('APP_COVERAGE'):
+    import coverage
+    COV = coverage.coverage(branch=True, include='app/*')
+    COV.start()
+
 
 def make_shell_context():
     """自动加载环境"""
@@ -31,8 +37,26 @@ manager.add_command("shell",Shell(make_context=make_shell_context))
 manager.add_command("db",MigrateCommand)
 
 
+@manager.command
+def test(coverage=True):
+    """Run the unit tests."""
+    import sys
+    if coverage and not os.environ.get('APP_COVERAGE'):
+        os.environ['APP_COVERAGE'] = '1'
+        os.execvp(sys.executable, [sys.executable] + sys.argv)
+    import unittest
+    tests = unittest.TestLoader().discover('test')
+    unittest.TextTestRunner(verbosity=2).run(tests)
+    if COV:
+        COV.stop()
+        COV.save()
+        print('Coverage Summary:')
+        COV.report()
+        COV.erase()
+    sys.exit(0)
 
-# api.add_resource(TodoList, '/todos')
+
+
 
 
 if __name__ == '__main__' :
