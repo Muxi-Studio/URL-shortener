@@ -33,6 +33,7 @@ def transform(_origin):
         _origin = quotient
     return result
 
+
 if __name__ == '__main__':
     print(transform(0))
     print(transform(1))

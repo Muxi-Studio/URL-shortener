@@ -1,6 +1,6 @@
 from . import api
-from app.decorators import login_required,admin_required,moderator_required
-from flask_restful import Resource,abort,reqparse,Api
+from app.decorators import admin_required,moderator_required
+from flask_restful import Resource,reqparse,Api
 from app.models import User,db
 api=Api(api,prefix="/user")
 
@@ -29,23 +29,24 @@ class UserHandlerClass(Resource):
              role_id=(args["role_id"] if args["role_id"] else 2))
         db.session.add(u)
         db.session.commit()
-        return {},200
+        return {"msg":"user created"},200
 
     @admin_required
     def delete(self,id):
         u=User.query.get_or_404(id)
         db.session.delete(u)
         db.session.commit()
-        return {},200
+        return {"msg":"user deleted"},200
 
     @moderator_required
     def put(self,id):
         u = User.query.get_or_404(id)
         args = parser_copy.parse_args(strict=True)
         u.email=args["email"] if args["email"] else u.email
-        u.password=args["password"] if args["password"] else args["password"]
+        if args["password"]:
+            u.password=args["password"]
         db.session.add(u)
         db.session.commit()
-        return {},200
+        return {"msg":"user updated"},200
 
 api.add_resource(UserHandlerClass, '/<int:id>/',endpoint="user")

@@ -5,7 +5,7 @@
     : 学而API采用用户注册邮箱和token两种形式验证
     : 建议使用token，更加安全
     .....................................
-    : copyright: (c) 2016 by MuxiStudio
+    : copyright: (c) 2018 by MuxiStudio
     : license: MIT
 """
 

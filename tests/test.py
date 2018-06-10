@@ -196,6 +196,7 @@ class APITestCase(unittest.TestCase):
                               headers=self.get_token_headers(
                                   moderator.generate_auth_token()
                               ))
+        print(res.status_code)
         self.assertTrue(res.status_code == 403)
 
         res = self.client.delete(url_for("api.user", id=3),

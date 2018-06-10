@@ -125,7 +125,7 @@ class User(db.Model):
 
     def is_administrator(self):
         # is administrator
-        return (self.role_id == 2)
+        return (self.role_id == 3)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -160,12 +160,13 @@ class URLMapping(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     long_url=db.Column(db.String(200),unique=True,index=True)
     short_code=db.Column(db.String(20),unique=True,index=True)
-    item_type=db.Column(db.Boolean,default=True)
+    id_userd=db.Column(db.Boolean,default=True)
+    item_type=db.Column(db.String,default="generated") #默认为generated，如果传来自定义短码则为custom
     insert_time=db.Column(db.DateTime,default=datetime.utcnow)
     update_time=db.Column(db.DateTime,default=datetime.utcnow)
     available=db.Column(db.Boolean,default=True)
     is_locked=db.Column(db.Boolean,default=False)
-    password=db.Column(db.String(20),nullable=True)
+    password=db.Column(db.String(50),nullable=True)
     count = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     statistics = db.relationship('Statistics', backref='urlmap',
