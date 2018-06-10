@@ -1,0 +1,96 @@
+swagger: '2.0'
+
+#################################INFO START##########################
+info:
+  description: |
+    短链接API
+  version: 1.0.0
+  title: Muxi URL Shortener
+
+  contact:
+    email: 3480437308@qq.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+###############################INFO END#################################
+
+host: andrewpqc.xyz
+basePath: /api/v1.0
+schemes:
+ - https
+ - http
+######################TAG START#######################################
+# tags:
+# - name: 唯一的URL
+#   description: token
+
+
+##########################TAG END######################################
+
+###########################AUTH START#################################
+# securityDefinitions:
+
+#   basic:
+#     type: basic
+#     description: 本服务所有api均需要Basic Auth验证的保护，如果需要账户请联系Andrewpqc
+
+
+########################AUTH END######################################
+
+
+########################PATH START####################################
+paths:
+  /get-short/:
+    post:
+      summary: 根据长连接获取短链接或自定义短链接
+      description: 
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - in: body
+          required: true
+          name: long_url
+          type: string
+          description: 需要转换的长连接
+        - in: body
+          description: 自定义短码(可选)
+          name: customize_short_code
+          type: string
+          required: false
+      responses:
+        100:
+          description: 自定义短码已被占用
+        200:
+          description: OK
+          schema:
+            properties:
+              short_url:
+                type: string
+                description: 短链接
+  /get-origin/:
+    post:
+      summary: 根据本服务生成的短链接来查询原始长链接
+      description: 
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - in: body
+          required: true
+          name: short_url
+          type: string
+          description: 本服务生成的短链接
+      responses:
+        404:
+          description: 未找到记录
+        200:
+          description: OK
+          schema:
+            properties:
+              origin_url:
+                type: string
+                description: 原始的长链接
+
