@@ -1,9 +1,34 @@
+#coding: utf-8
+
+"""
+urlmap.py 长url与短码之间的映射关系管理API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(GET) /api/user/<int:id>/urlmaps/ 获取某一用户的所有urlmap信息,
+                                协管员以上权限或获取当前用户的urlmap信息。
+(GET) /api/urlmap/<int:id>/ 获取某一id的url映射的信息
+(POST)　/api/urlmap/0/ 创建一个url映射，需登录
+(PUT)　/api/urlmap/<int:id>/ 更新一个urlmap,需要协管员以上权限或者该urlmap的创建者
+(DELETE)　/api/urlmap/<int:id>/ 删除某一url映射，需要管理员权限或者是该urlmap的创建者
+"""
+
+
 from . import api
+from flask import jsonify
 from flask_restful import Resource, abort, reqparse, Api
-from app.models import db, URLMapping,Permission
+from app.models import db, URLMapping,Permission,User
 from .authentication import auth
-from app.decorators import moderator_required, admin_required
 from utils import transform
+
+@auth.login_required
+@api.route("/user/<int:id>/urlmaps/")
+def get_urlmaps_by_userID(id):
+    u=User.query.get_or_404(id)
+    if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == id):
+        urlmaps=u.urlmaps.all()
+        return jsonify([urlmap.to_json() for urlmap in urlmaps]),200
+    else:
+        return jsonify({"msg":"权限不够"}),403
 
 
 api = Api(api, prefix="/urlmap")
@@ -23,7 +48,7 @@ parser_copy.replace_argument('long_url', type=str,
 
 class URLMapHandlerClass(Resource):
     def get(self, id):
-        url_map = URLMapping.Query.get_or_404(id)
+        url_map = URLMapping.query.get_or_404(id)
         return url_map.to_json(), 200
 
     @auth.login_required
