@@ -1,3 +1,8 @@
+# coding: utf-8
+
+"""
+statistics.py URLmap的统计信息
+"""
 from . import api
 from app.models import Permission
 from flask_restful import Resource,abort,reqparse,Api
