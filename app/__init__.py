@@ -23,3 +23,5 @@ def create_app(config_key):
 
 #the project app
 app = create_app(config_key = os.getenv('APP_CONFIG') or 'default')
+
+from app import jump

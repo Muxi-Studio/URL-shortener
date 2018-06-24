@@ -21,7 +21,7 @@ from .authentication import auth
 from utils import transform
 
 @auth.login_required
-@api.route("/user/<int:id>/urlmaps/")
+@api.route("/user/<int:id>/urlmaps/",methods=['GET'])
 def get_urlmaps_by_userID(id):
     u=User.query.get_or_404(id)
     if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == id):

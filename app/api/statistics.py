@@ -2,27 +2,25 @@
 
 """
 statistics.py URLmap的统计信息
+
+
 """
 from . import api
-from app.models import Permission
-from flask_restful import Resource,abort,reqparse,Api
-from app.decorators import admin_required,permission_required
+from flask import jsonify
+from .authentication import auth
+from app.models import Permission,URLMapping,Statistics
+from app.decorators import admin_required,permission_required,moderator_required
 
-api=Api(api,prefix="/statistics")
+@auth.login_required
+@api.route("/urlmap/<int:id>/statistics/",methods=['GET'])
+def get_statistics_by_urlmapID(id):
+    urlmap=URLMapping.query.get_or_404(id)
+    statistics=urlmap.statistics.all()
+    return jsonify([s.to_json() for s in statistics])
 
-class StatisticsHandlerClass(Resource):
+@moderator_required
+@api.route('/statistics/',methods=['GET'])
+def get_all_statistics():
+    statistics=Statistics.query.all()
+    return jsonify([s.to_json() for s in statistics])
 
-    @permission_required(Permission.ADMINISTER)
-    def get(self,id):
-        return "hello,world"+str(id)
-
-    def post(self,id):
-        return "here is post"
-
-    def delete(self,id):
-        return "here is delete"
-
-    def put(self,id):
-        return "here is put"
-
-api.add_resource(StatisticsHandlerClass, '/<int:id>/',endpoint="statistic")
