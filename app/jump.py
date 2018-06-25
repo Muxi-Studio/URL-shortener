@@ -12,7 +12,7 @@ from . import app,db
 from .models import URLMapping,Statistics
 from flask import redirect,request,abort
 
-@app.route('/<short_code>/',methods=['GET'])
+@app.route('/<string:short_code>',methods=['GET'])
 def jump(short_code):
     urlmap=URLMapping.query.filter_by(short_code=short_code).first()
     if not urlmap:
@@ -23,5 +23,5 @@ def jump(short_code):
     s=Statistics(ip=remote_ip,useragent=user_agent,urlmap_id=urlmap.id)
     db.session.add_all([s,urlmap])
     db.session.commit()
-    return redirect(urlmap.long_url,302,"正在跳转...")
+    return redirect(urlmap.long_url,302)
 

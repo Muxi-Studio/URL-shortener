@@ -9,15 +9,31 @@ user.py  用户资源的增删改查API
                             建议统一使用/api/user/0/
 (PUT) /api/user/<int:id> 更新用户信息，需要协管员以上权限或者用户本人
 (DELETE) /api/user/<int:id>/ 删除用户，需要管理员以上权限或者用户本人
-
+(GET) /api/user/confirm/ confirm用户
 """
 
 
+from flask import g, jsonify
+from flask_restful import Resource, reqparse, Api
+
+from .mail import send_mail
+from app.decorators import moderator_required
+from app.models import User, db, Permission
 from . import api
 from .authentication import auth
-from app.decorators import admin_required,moderator_required
-from flask_restful import Resource,reqparse,Api
-from app.models import User,db,Permission
+
+
+@auth.login_required
+@api.route('/user/confirm/<token>',methods=['GET'])
+def confirm(token):
+    if g.current_user.is_confirmed:
+        return jsonify({"msg":"confirmed already"}), 201
+    if g.current_user.confirm(token):
+        return jsonify({"msg":"ok"}),200
+    else:
+        return jsonify({"msg":"the confirmation is invalid or has expired."}),202
+
+
 api=Api(api,prefix="/user")
 
 
@@ -45,7 +61,8 @@ class UserHandlerClass(Resource):
              role_id=(args["role_id"] if args["role_id"] else 2))
         db.session.add(u)
         db.session.commit()
-        return {"msg":"user created"},200
+        send_mail(u.email,'templates/confirm',token=u.generate_confirmation_token(),user=u)
+        return {"msg":"user created and email send!"},200
 
     @auth.login_required
     def delete(self,id):

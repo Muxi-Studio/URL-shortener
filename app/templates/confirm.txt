@@ -1,0 +1,13 @@
+Dear {{ user.email }},
+
+Welcome to Muxi URL Shorter Service!
+
+To confirm your account please click on the following link:
+
+{{ url_for('api.confirm', token=token, _external=True) }}
+
+Sincerely,
+
+The MuxiStudio Team
+
+Note: replies to this email address are not monitored.

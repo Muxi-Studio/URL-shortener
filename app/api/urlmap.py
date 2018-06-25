@@ -14,7 +14,8 @@ urlmap.py 长url与短码之间的映射关系管理API
 
 
 from . import api
-from flask import jsonify
+from flask import jsonify,g
+from datetime import datetime
 from flask_restful import Resource, abort, reqparse, Api
 from app.models import db, URLMapping,Permission,User
 from .authentication import auth
@@ -111,6 +112,7 @@ class URLMapHandlerClass(Resource):
                 return {"msg": "更新的目标url已经存在"}, 202
             um = URLMapping.query.get_or_404(id)
             um.long_url = target
+            um.update_time=datetime.utcnow
             db.session.add(um)
             db.session.commit()
             return {"msg": "URLMapping updated"}, 200

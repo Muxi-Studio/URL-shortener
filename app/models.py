@@ -72,7 +72,7 @@ class User(db.Model):
     __table_args__ = {"mysql_charset": "utf8"}
     id=db.Column(db.Integer,primary_key=True)
     email=db.Column(db.String(20))
-    password=db.Column(db.String(128))
+    password_hash=db.Column(db.String(128))
     is_confirmed=db.Column(db.Boolean,default=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     urlmaps = db.relationship('URLMapping', backref='user',
@@ -98,6 +98,25 @@ class User(db.Model):
             # expiration
         )
         return s.dumps({'id': self.id})
+
+    def generate_confirmation_token(self,expiration=3600):
+        """generate a tkoen for confirmation"""
+        s=Serializer(current_app.config['SECRET_KEY'],expiration)
+        return s.dumps({'confirm':self.id})
+
+    def confirm(self,token):
+        s=Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data=s.loads(token)
+        except:
+            return False
+        if data.get('confirm')!=self.id:
+            return False
+        self.is_confirmed=True
+        db.session.add(self)
+        db.session.commit()
+        return True
+
 
     def to_json(self):
         json_user = {
@@ -160,7 +179,7 @@ class URLMapping(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     long_url=db.Column(db.String(200),unique=True,index=True)
     short_code=db.Column(db.String(20),unique=True,index=True)
-    id_userd=db.Column(db.Boolean,default=True)
+    id_used=db.Column(db.Boolean,default=True)
     item_type=db.Column(db.String,default="generated") #默认为generated，如果传来自定义短码则为custom
     insert_time=db.Column(db.DateTime,default=datetime.utcnow)
     update_time=db.Column(db.DateTime,default=datetime.utcnow)

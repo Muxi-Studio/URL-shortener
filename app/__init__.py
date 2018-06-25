@@ -1,9 +1,13 @@
 #coding: utf-8
 
 import os
+
+from celery import Celery
 from flask import Flask
-from config import config
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
+
+from config import config
 
 db=SQLAlchemy()
 
@@ -23,5 +27,25 @@ def create_app(config_key):
 
 #the project app
 app = create_app(config_key = os.getenv('APP_CONFIG') or 'default')
+mails=Mail(app)
 
-from app import jump
+# celery = Celery('mails',broker=app.config["CELERY_BROKER_URI"],backend=app.config["CELERY_BACKEND_URI"])
+
+# setting up celery
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
+
+celery=make_celery(app)
+
+from . import jump
+from app.api import mail
