@@ -1,5 +1,5 @@
 FROM python:3.6
-MAINTAINER Andrewpqc <andrewpqc@>mails.ccnu.edu.cn>
+MAINTAINER Andrewpqc <andrewpqc@mails.ccnu.edu.cn>
 
 ENV DEPLOY_PATH /URLshorter
 
