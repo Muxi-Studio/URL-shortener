@@ -5,15 +5,15 @@ from app import db
 from flask import current_app
 from datetime import datetime
 from itsdangerous import URLSafeSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
-
 
 class Permission:
     """
     Permission 权限
-    1. COMMENT: 0x01
-    2. MODERATE_COMMENTS: 0x02
-    3. ADMINISTER: 0x04
+    1. 普通用户权限: 0x01
+    2. 协管员权限: 0x02
+    3. 管理员权限: 0x04
     """
     COMMENT = 0x01
     MODERATE_COMMENTS = 0x02
@@ -32,7 +32,7 @@ class Role(db.Model):
     __table_args__ = {'mysql_charset': 'utf8'}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    default = db.Column(db.Boolean, default=False, index=True)
+    default = db.Column(db.Boolean, default=False)
     permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role',
             lazy='dynamic', cascade='all')
@@ -71,12 +71,19 @@ class User(db.Model):
     __tablename__ = "users"
     __table_args__ = {"mysql_charset": "utf8"}
     id=db.Column(db.Integer,primary_key=True)
-    email=db.Column(db.String(20))
-    password=db.Column(db.String(128))
+    email=db.Column(db.String(20),unique=True,index=True)
+    timestamp=db.Column(db.DateTime,default=datetime.utcnow,)
+    password_hash=db.Column(db.String(128))
     is_confirmed=db.Column(db.Boolean,default=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     urlmaps = db.relationship('URLMapping', backref='user',
                 lazy='dynamic', cascade='all')
+
+    @property
+    def time(self):
+        time_str = str(self.insert_time)
+        time = time_str[0:10]
+        return time
 
     @property
     def password(self):
@@ -99,10 +106,16 @@ class User(db.Model):
         )
         return s.dumps({'id': self.id})
 
+    def generate_confirmation_token(self,expiration=1800):
+        """generate a token for confirmation"""
+        s=TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'],expiration)
+        return s.dumps({"confirm":self.id})
+
     def to_json(self):
         json_user = {
             'id': self.id,
             'email': self.email,
+            'join_time':self.time,
             'is_confirmed': self.is_confirmed,
             'role_id': self.role_id
         }
@@ -160,25 +173,48 @@ class URLMapping(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     long_url=db.Column(db.String(200),unique=True,index=True)
     short_code=db.Column(db.String(20),unique=True,index=True)
-    id_userd=db.Column(db.Boolean,default=True)
+    id_used=db.Column(db.Boolean,default=True)
     item_type=db.Column(db.String,default="generated") #默认为generated，如果传来自定义短码则为custom
     insert_time=db.Column(db.DateTime,default=datetime.utcnow)
     update_time=db.Column(db.DateTime,default=datetime.utcnow)
-    available=db.Column(db.Boolean,default=True)
     is_locked=db.Column(db.Boolean,default=False)
-    password=db.Column(db.String(50),nullable=True)
+    password_hash=db.Column(db.String(128),nullable=True)
     count = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     statistics = db.relationship('Statistics', backref='urlmap',
                               lazy='dynamic', cascade='all')
+
+    @property
+    def i_time(self):
+        time_str = str(self.insert_time)
+        time = time_str[0:10]
+        return time
+
+    @property
+    def u_time(self):
+        time_str = str(self.update_time)
+        time = time_str[0:10]
+        return time
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def to_json(self):
         json_URLMap = {
             'id': self.id,
             'long_url': self.long_url,
             'short_url': self.short_code,
+            'insert_time':self.i_time,
+            'update_time':self.u_time,
             'item_type':self.item_type,
-            'available':self.available,
             'is_locked':self.is_locked,
             'password':self.password,
             'count':self.count,
@@ -198,11 +234,16 @@ class Statistics(db.Model):
     ip=db.Column(db.String(50))
     urlmap_id=db.Column(db.Integer,db.ForeignKey("urlmaps.id"))
 
+    @property
+    def time(self):
+        time_str = str(self.timestamp)
+        time = time_str[0:10]
+        return time
 
     def to_json(self):
         json_statistics = {
             'id': self.id,
-            'timestamp': self.timestamp,
+            'timestamp': self.time,
             'useragent': self.useragent,
             'item_type':self.item_type,
             'ip':self.ip

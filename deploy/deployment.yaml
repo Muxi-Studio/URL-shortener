@@ -1,0 +1,80 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: url_shorter
+  namespace: url_shorter
+  labels:
+    run: url_shorter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: url_shorter
+    spec:
+      containers:
+      - name: url_shorter
+        image: ...
+        args:
+          - gunicorn
+          - --name
+          - url_shorter
+          - -k
+          - gevent
+          - --timeout
+          - "120"
+          - --log-level
+          - debug
+          - -b
+          - 0.0.0.0:5488
+          - -w
+          - "2"
+          - wsgi:app
+        env:
+          - name: APP_CONFIG
+            value: "production"
+          - name: SECRET_KEY
+            value:
+          - name: MAIL_DEFAULT_SENDER
+            value:
+          - name: MAIL_USERNAME
+            value:
+          - name: MAIL_PASSWORD
+            value:
+          - name: CELERY_BROKER_URI
+            value:
+          - name: CELERY_BACKEND_URI
+            value:
+          - name: DATABASE_ORM_URI
+            value: ""
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        ports:
+          - containerPort: 5488
+      - name: celery
+        image: ...
+        args:
+          - celery
+          - worker
+          - -A
+          - app.celery_app
+          - --loglevel=INFO
+        env:
+          - name: APP_CONFIG
+            value: "production"
+          - name: SECRET_KEY
+            value:
+          - name: MAIL_DEFAULT_SENDER
+            value:
+          - name: MAIL_USERNAME
+            value:
+          - name: MAIL_PASSWORD
+            value:
+          - name: CELERY_BROKER_URI
+            value:
+          - name: CELERY_BACKEND_URI
+            value:
+          - name: DATABASE_ORM_URI
+            value: ""
+          - name: PYTHONUNBUFFERED
+            value: "1"

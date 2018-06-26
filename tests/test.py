@@ -7,10 +7,11 @@
 
 import unittest
 import json
+from utils import transform
 from base64 import b64encode
 from flask import url_for
 from app import create_app,db
-from app.models import Role,User
+from app.models import Role,User,URLMapping
 
 
 class APITestCase(unittest.TestCase):
@@ -196,7 +197,6 @@ class APITestCase(unittest.TestCase):
                               headers=self.get_token_headers(
                                   moderator.generate_auth_token()
                               ))
-        print(res.status_code)
         self.assertTrue(res.status_code == 403)
 
         res = self.client.delete(url_for("api.user", id=3),
@@ -204,3 +204,170 @@ class APITestCase(unittest.TestCase):
                                   admin.generate_auth_token()
                               ))
         self.assertTrue(res.status_code == 200)
+
+    def test_urlmap_CRUD(self):
+        admin = User(
+            email='admin@admin.com',
+            password=b64encode(b'muxi304'),
+            role_id=3
+        )
+
+        moderator = User(
+            email='moderator@moderator.com',
+            password=b64encode(b'muxi304'),
+            role_id=2
+        )
+
+        normal_user = User(
+            email='normaluser@normaluser.com',
+            password=b64encode(b'muxi304'),
+            role_id=1
+        )
+
+        normal_user2=User(
+            email='andrewpqc@mails.ccnu.edu.cn',
+            password=b64encode(b'muxi304'),
+            role_id=1
+        )
+        db.session.add(admin)
+        db.session.commit()
+        db.session.add(moderator)
+        db.session.commit()
+        db.session.add(normal_user)
+        db.session.commit()
+        db.session.add(normal_user2)
+        db.session.commit()
+
+        res=self.client.post(url_for("api.URLmap",id=0),
+                         headers=self.get_token_headers(
+                             normal_user.generate_auth_token()
+                         ),
+                         data=json.dumps({
+                             "long_url":"https://www.google.com/search?q=ls&oq=ls&aqs="
+                                        "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                         }))
+        self.assertTrue(res.status_code==200)
+
+        res=self.client.post(url_for("api.URLmap",id=0),
+                             headers=self.get_token_headers(
+                                 normal_user.generate_auth_token()
+                             ),
+                             data=json.dumps({
+                                 "long_url":"https://andrewpqc.github.io/2018/04/30/"
+                                            "let-the-terminal-penetrate-the-firewall/#more",
+                                 "custom_short_code":"ABC"
+                             }))
+        self.assertTrue(res.status_code==200)
+
+        urlmap1,urlmap2=URLMapping.query.all()
+        self.assertTrue(urlmap1.short_code==transform(urlmap1.id))
+        self.assertTrue(urlmap2.short_code=="ABC")
+
+        res = self.client.post(url_for("api.URLmap", id=0),
+                               headers=self.get_token_headers(
+                                   normal_user.generate_auth_token()
+                               ),
+                               data=json.dumps({
+                                   "long_url": "https://www.google.com/search?q=ls&oq=ls&aqs"
+                                               "=chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                               }))
+        self.assertTrue(res.status_code == 200)
+        self.assertTrue(len(URLMapping.query.all())==2)
+
+        res=self.client.get(url_for("api.URLmap",id=1))
+        self.assertTrue(res.status_code==200)
+
+        res=self.client.get(url_for("api.URLmap",id=100))
+        self.assertTrue(res.status_code==404)
+
+        res = self.client.put(url_for("api.URLmap", id=1),
+                              headers=self.get_token_headers(
+                                  normal_user2.generate_auth_token()
+                              ),
+                              data=json.dumps({
+                                  "long_url": "https://www.google.com/search?q=pwd&oq=pwd&aqs="
+                                              "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                              }))
+        self.assertTrue(res.status_code == 403)
+
+        res=self.client.put(url_for("api.URLmap",id=1),
+                            headers=self.get_token_headers(
+                                normal_user.generate_auth_token()
+                            ),
+                            data=json.dumps({
+                                "long_url":"https://www.google.com/search?q=pwd&oq=pwd&aqs="
+                                        "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                            }))
+        self.assertTrue(res.status_code==200)
+
+        res = self.client.put(url_for("api.URLmap", id=1),
+                              headers=self.get_token_headers(
+                                  moderator.generate_auth_token()
+                              ),
+                              data=json.dumps({
+                                  "long_url": "https://www.google.com/search?q=pwd&oq=pwd&aqs="
+                                              "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                              }))
+        self.assertTrue(res.status_code == 202)
+        urlmap=URLMapping.query.get_or_404(1)
+        self.assertTrue(urlmap.long_url=="https://www.google.com/search?q=pwd&oq=pwd&aqs="
+                                              "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8")
+
+        res=self.client.delete(url_for("api.URLmap",id=1),
+                           headers=self.get_token_headers(
+                               normal_user2.generate_auth_token()
+                           ))
+        self.assertTrue(res.status_code==403)
+
+        res = self.client.delete(url_for('api.URLmap', id=1),
+                                 headers=self.get_token_headers(
+                                     moderator.generate_auth_token()
+                                 ))
+        self.assertTrue(res.status_code == 403)
+
+        res=self.client.delete(url_for('api.URLmap',id=1),
+                               headers=self.get_token_headers(
+                                   normal_user.generate_auth_token()
+                               ))
+        self.assertTrue(res.status_code==200)
+
+        res = self.client.delete(url_for('api.URLmap', id=2),
+                                 headers=self.get_token_headers(
+                                     admin.generate_auth_token()
+                                 ))
+        self.assertTrue(res.status_code == 200)
+
+    def test_jump(self):
+        normal_user = User(
+            email='normaluser@normaluser.com',
+            password=b64encode(b'muxi304'),
+            role_id=1
+        )
+
+        db.session.add(normal_user)
+        db.session.commit()
+
+        self.client.post(url_for("api.URLmap", id=0),
+                               headers=self.get_token_headers(
+                                   normal_user.generate_auth_token()
+                               ),
+                               data=json.dumps({
+                                   "long_url": "https://www.google.com/search?q=ls&oq=ls&aqs="
+                                               "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                               }))
+
+
+        self.client.post(url_for("api.URLmap", id=0),
+                               headers=self.get_token_headers(
+                                   normal_user.generate_auth_token()
+                               ),
+                               data=json.dumps({
+                                   "long_url": "https://andrewpqc.github.io/2018/04/30/"
+                                               "let-the-terminal-penetrate-the-firewall/#more",
+                                   "custom_short_code": "ABC"
+                               }))
+        # res=self.client.get(url_for('jump',short_code='notexist'))
+        # self.assertTrue(res.status_code==404)
+        #
+        # res=self.client.get(url_for('jump',short_code='ABC'))
+        # self.assertTrue(res.status_code==302)

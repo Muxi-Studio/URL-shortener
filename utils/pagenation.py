@@ -7,7 +7,7 @@
 from flask import url_for
 
 
-def pagination(lit, page, perpage):
+def pagination(lit, page, perpage,endpoint):
     """
     返回当前分页的列表对象,
     next、last链接
@@ -22,8 +22,8 @@ def pagination(lit, page, perpage):
     current = lit[perpage*(page-1): perpage*page]
     next_page = ""
     if page < last:
-        next_page = url_for('api.search', page=page+1)
+        next_page = url_for(endpoint, page=page+1)
     elif page == last:
         next_page = ""
-    last_page = url_for('api.search', page=last)
+    last_page = url_for(endpoint, page=last)
     return [current, (next_page, last_page)]
