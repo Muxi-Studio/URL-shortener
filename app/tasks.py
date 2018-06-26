@@ -15,8 +15,6 @@ from flask import render_template
 from app import celery_app
 
 
-
-
 def msg_dict(to, user, token, **kwargs):
     """
     生成邮件

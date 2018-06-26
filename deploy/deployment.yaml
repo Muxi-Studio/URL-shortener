@@ -1,0 +1,80 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: url_shorter
+  namespace: url_shorter
+  labels:
+    run: url_shorter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: url_shorter
+    spec:
+      containers:
+      - name: url_shorter
+        image: ...
+        args:
+          - gunicorn
+          - --name
+          - url_shorter
+          - -k
+          - gevent
+          - --timeout
+          - "120"
+          - --log-level
+          - debug
+          - -b
+          - 0.0.0.0:5488
+          - -w
+          - "2"
+          - wsgi:app
+        env:
+          - name: XUEER_ORM_URI
+            value: "mysql://muxi:muxi304@rm-wz986q9gcfau74vi0.mysql.rds.aliyuncs.com:3306/xueer"
+          - name: C_FORCE_ROOT
+            value: "true"
+          - name: CELERY_ACCEPT_CONTENT
+            value: "json"
+          - name: REDIS1_HOST
+            value: "123.56.41.13"
+          - name: REDIS2_HOST
+            value: "123.56.41.13"
+          - name: REDIS6380PASS
+            value: "foobared6380"
+          - name: REDIS6385PASS
+            value: "foobared6385"
+          - name: REDIS3_HOST
+            value: redis1.xueer.svc.cluster.local
+          - name: PYTHONUNBUFFERED
+            value: "1"
+          - name: X_API_KEY
+            value: "4Q6y6pmdtZBP1QeOUdehoPAJCOtj2kzk2mouVjBa"
+        ports:
+          - containerPort: 5488
+      - name: celery
+        image: registry-internal.cn-shenzhen.aliyuncs.com/muxi/xueer_be:1.1.1
+        args:
+          - celery
+          - worker
+          - -A
+          - app.celery_app
+          - --loglevel=INFO
+        env:
+          - name: XUEER_ORM_URI
+            value: "mysql://muxi:muxi304@rm-wz986q9gcfau74vi0.mysql.rds.aliyuncs.com:3306/xueer"
+          - name: C_FORCE_ROOT
+            value: "true"
+          - name: CELERY_ACCEPT_CONTENT
+            value: "json"
+          - name: REDIS1_HOST
+            value: "123.56.41.13"
+          - name: REDIS2_HOST
+            value: "123.56.41.13"
+          - name: REDIS6380PASS
+            value: "foobared6380"
+          - name: REDIS6385PASS
+            value: "foobared6385"
+          - name: REDIS3_HOST
+            value: redis1.xueer.svc.cluster.local

@@ -12,44 +12,37 @@ user.py  用户资源的增删改查API
 (GET) /api/user/confirm/ confirm用户
 """
 
-# import app.tasks
-from flask import g, jsonify,current_app
+from . import api
+from .authentication import auth
+from flask import g, jsonify,current_app,request
 from flask_restful import Resource, reqparse, Api
-from itsdangerous import URLSafeSerializer as Serializer
-
 from app.decorators import moderator_required
 from app.models import User, db, Permission
-from . import api
-
-from .authentication import auth
+from itsdangerous import TimedJSONWebSignatureSerializer
 
 
-# @auth.login_required
+
 @api.route('/user/confirm/<token>',methods=['GET'])
 def confirm(token):
-    print(current_app.config['SECRET_KEY'])
-    s = Serializer(current_app.config['SECRET_KEY'])
+    s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'])
     try:
         data = s.loads(token)
     except:
-        return "验证过期或token错误，请重新获取邮件"
+        return jsonify({'msg':"the confirmation link is invalid or has expired!"}),400
     id=data.get("confirm")
     u=User.query.get_or_404(int(id))
     u.is_confirmed = True
     db.session.add(u)
     db.session.commit()
-    return "验证账号成功"
+    return jsonify({'msg':"ok"}),200
 
-
-    if g.current_user.is_confirmed:
-        return jsonify({"msg":"confirmed already"}), 201
-    if g.current_user.confirm(token):
-        return jsonify({"msg":"ok"}),200
-    else:
-        return jsonify({"msg":"the confirmation is invalid or has expired."}),202
-
-
-
+@api.route('/email/used/',methods=['GET'])
+def email_used():
+    email=request.args.get('email')
+    u=User.query.filter_by(email=email).first()
+    if u is not None:
+        return jsonify({'msg':"email already used"}),201
+    return jsonify({'msg':"email not used"}),200
 
 
 api=Api(api,prefix="/user")

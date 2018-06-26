@@ -54,6 +54,8 @@ class URLMapHandlerClass(Resource):
 
     @auth.login_required
     def post(self, id):
+        if not g.current_user.is_confirmed:
+            return jsonify({'msg':"please confirm your account first"}),401
         args = parser.parse_args(strict=True)
         short_code = args["custom_short_code"]
         long_url = args["long_url"]

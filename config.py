@@ -25,14 +25,15 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    MAIL_DEFAULT_SENDER='3480437308@qq.com'
+    MAIL_DEFAULT_SENDER=os.environ.get('MAIL_DEFAULT_SENDER') or '3480437308@qq.com'
     MAIL_SERVER = 'smtp.qq.com'  # 邮件服务器地址
     MAIL_PORT = 25  # 邮件服务器端口
     MAIL_USE_TLS = True  # 启用 TLS
-    MAIL_USERNAME = "3480437308@qq.com"  # os.environ.get('MAIL_USERNAME') or 'me@example.com'
-    MAIL_PASSWORD = "iifwjwzfjxvxchig"  # os.environ.get('MAIL_PASSWORD') or '123456'
-    CELERY_BROKER_URI = os.getenv('CELERY_BROKER_URI') or 'redis://127.0.0.1:6379'  # 指定 Broker
-    CELERY_BACKEND_URI = os.getenv('CELERY_BACKEND_URI') or 'redis://127.0.0.1:6379/0'  # 指定 Backend
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME") or "3480437308@qq.com"
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or "iifwjwzfjxvxchig"
+    CELERY_BROKER_URI = os.environ.get('CELERY_BROKER_URI') or 'redis://127.0.0.1:6379'  # 指定 Broker
+    CELERY_BACKEND_URI = os.environ.get('CELERY_BACKEND_URI') or 'redis://127.0.0.1:6379/0'  # 指定 Backend
+
     @staticmethod
     def init_app(app):
         pass
@@ -54,7 +55,7 @@ more connection URI format:
 class DevelopmentConfig(Config):
     """development configuration"""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "data-dev.sqlite")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_ORM_URI") or "sqlite:///" + os.path.join(basedir, "data-dev.sqlite")
 
 
 
@@ -75,7 +76,7 @@ class TestingConfig(Config):
 # production configuration
 class ProductionConfig(Config):
     """production configuration"""
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "data.sqlite")
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_ORM_URI') or "sqlite:///" + os.path.join(basedir, "data.sqlite")
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
