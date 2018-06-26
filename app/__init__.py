@@ -29,11 +29,11 @@ def create_app(config_key):
 app = create_app(config_key = os.getenv('APP_CONFIG') or 'default')
 mails=Mail(app)
 
-# celery = Celery('mails',broker=app.config["CELERY_BROKER_URI"],backend=app.config["CELERY_BACKEND_URI"])
 
-# setting up celery
+
 def make_celery(app):
-    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URI'],
+                    backend=app.config["CELERY_BACKEND_URI"])
     celery.conf.update(app.config)
     TaskBase = celery.Task
     class ContextTask(TaskBase):
@@ -44,8 +44,12 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
+celery_app=make_celery(app)
 
-celery=make_celery(app)
+
+
 
 from . import jump
-from app.api import mail
+
+#注意，这里一定需要导入，不然就会出现未注册的task
+from .tasks import send_mail

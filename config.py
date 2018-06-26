@@ -25,13 +25,14 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
+    MAIL_DEFAULT_SENDER='3480437308@qq.com'
     MAIL_SERVER = 'smtp.qq.com'  # 邮件服务器地址
     MAIL_PORT = 25  # 邮件服务器端口
     MAIL_USE_TLS = True  # 启用 TLS
     MAIL_USERNAME = "3480437308@qq.com"  # os.environ.get('MAIL_USERNAME') or 'me@example.com'
     MAIL_PASSWORD = "iifwjwzfjxvxchig"  # os.environ.get('MAIL_PASSWORD') or '123456'
-    CELERY_BROKER_URL = os.getenv('BROKER_URL') or 'redis://127.0.0.1:6379'  # 指定 Broker
-    CELERY_BACKEND_URL = os.getenv('CELERY_RESULT_BACKEND') or 'redis://127.0.0.1:6379/0'  # 指定 Backend
+    CELERY_BROKER_URI = os.getenv('CELERY_BROKER_URI') or 'redis://127.0.0.1:6379'  # 指定 Broker
+    CELERY_BACKEND_URI = os.getenv('CELERY_BACKEND_URI') or 'redis://127.0.0.1:6379/0'  # 指定 Backend
     @staticmethod
     def init_app(app):
         pass

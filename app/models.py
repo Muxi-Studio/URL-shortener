@@ -5,7 +5,17 @@ from app import db
 from flask import current_app
 from datetime import datetime
 from itsdangerous import URLSafeSerializer as Serializer
+# from itsdangerous import TimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
+
+
+# def generate_confirmation(self):
+#     s = TimedSerializer(current_app.secret_key, 'confirmation')
+#     return s.dumps(self.id)
+#
+# def check_confirmation(self, token, max_age=3600):
+#     s = TimedSerializer(current_app.secret_key, 'confirmation')
+#     return s.loads(token, max_age=max_age) == self.id
 
 
 class Permission:
@@ -99,23 +109,11 @@ class User(db.Model):
         )
         return s.dumps({'id': self.id})
 
-    def generate_confirmation_token(self,expiration=3600):
+    def generate_confirmation_token(self):
         """generate a tkoen for confirmation"""
-        s=Serializer(current_app.config['SECRET_KEY'],expiration)
-        return s.dumps({'confirm':self.id})
-
-    def confirm(self,token):
         s=Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data=s.loads(token)
-        except:
-            return False
-        if data.get('confirm')!=self.id:
-            return False
-        self.is_confirmed=True
-        db.session.add(self)
-        db.session.commit()
-        return True
+        return s.dumps({"confirm":self.id})
+
 
 
     def to_json(self):
