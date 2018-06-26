@@ -12,8 +12,9 @@ from flask import jsonify,request
 from utils import pagination
 from .authentication import auth
 from app.models import URLMapping,Statistics
-from app.decorators import moderator_required
+from app.decorators import moderator_required,confirmed_required
 
+@confirmed_required
 @auth.login_required
 @api.route("/urlmap/<int:id>/statistics/",methods=['GET'])
 def get_statistics_by_urlmapID(id):
@@ -21,6 +22,7 @@ def get_statistics_by_urlmapID(id):
     statistics=urlmap.statistics.all()
     return jsonify({"data":[s.to_json() for s in statistics]})
 
+@confirmed_required
 @moderator_required
 @api.route('/statistics/',methods=['GET'])
 def get_all_statistics():

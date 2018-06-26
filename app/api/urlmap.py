@@ -20,7 +20,9 @@ from flask_restful import Resource, abort, reqparse, Api
 from app.models import db, URLMapping,Permission,User
 from .authentication import auth
 from utils import transform
+from app.decorators import confirmed_required
 
+@confirmed_required
 @auth.login_required
 @api.route("/user/<int:id>/urlmaps/",methods=['GET'])
 def get_urlmaps_by_userID(id):
@@ -44,18 +46,21 @@ parser.add_argument('custom_short_code', type=str, help="用户自定义短码�
 parser_copy = parser.copy()
 parser_copy.remove_argument("custom_short_code")
 parser_copy.replace_argument('long_url', type=str,
-                             required=True, help="需要更改成的目标长url")
+                             required=False, help="需要更改成的目标长url")
+parser_copy.add_argument("password",type=str,required=False,help="需要设置的密码")
+parser_copy.add_argument('lock',type=bool,required=False,help="上锁和取消锁")
 
 
 class URLMapHandlerClass(Resource):
+
+    @confirmed_required
     def get(self, id):
         url_map = URLMapping.query.get_or_404(id)
         return url_map.to_json(), 200
 
+    @confirmed_required
     @auth.login_required
     def post(self, id):
-        if not g.current_user.is_confirmed:
-            return jsonify({'msg':"please confirm your account first"}),401
         args = parser.parse_args(strict=True)
         short_code = args["custom_short_code"]
         long_url = args["long_url"]
@@ -94,6 +99,7 @@ class URLMapHandlerClass(Resource):
                     db.session.commit()
                     return um.to_json(), 200
 
+    @confirmed_required
     @auth.login_required
     def delete(self, id):
         um = URLMapping.query.get_or_404(id)
@@ -104,16 +110,25 @@ class URLMapHandlerClass(Resource):
         else:
             return {"msg": "你无权删除该资源"}, 403
 
+    @confirmed_required
     @auth.login_required
     def put(self, id):
+        if  not g.current_user.is_confirmed:
+            return {"msg": "please confirm your account first"}, 401
         um = URLMapping.query.get_or_404(id)
         if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == um.user_id):
             args = parser_copy.parse_args(strict=True)
-            target = args['long_url']
-            if URLMapping.query.filter_by(long_url=target).first() is not None:
-                return {"msg": "更新的目标url已经存在"}, 202
-            um = URLMapping.query.get_or_404(id)
-            um.long_url = target
+            long_url = args['long_url']
+            password=args['password']
+            lock=args['lock']
+            if long_url is not None:
+                if URLMapping.query.filter_by(long_url=long_url).first() is not None:
+                    return {"msg": "更新的目标url已经存在"}, 202
+                um.long_url = long_url
+            if password is not None:
+                um.password=password
+            if lock is not None:
+                um.is_locked=lock
             um.update_time=datetime.utcnow
             db.session.add(um)
             db.session.commit()

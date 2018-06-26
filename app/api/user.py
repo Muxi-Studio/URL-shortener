@@ -16,7 +16,7 @@ from . import api
 from .authentication import auth
 from flask import g, jsonify,current_app,request
 from flask_restful import Resource, reqparse, Api
-from app.decorators import moderator_required
+from app.decorators import moderator_required,confirmed_required
 from app.models import User, db, Permission
 from itsdangerous import TimedJSONWebSignatureSerializer
 
@@ -76,6 +76,7 @@ class UserHandlerClass(Resource):
         send_mail(u.email,u,u.generate_confirmation_token())
         return {"msg":"user created and email send!"},200
 
+    @confirmed_required
     @auth.login_required
     def delete(self,id):
         u=User.query.get_or_404(id)
@@ -86,6 +87,7 @@ class UserHandlerClass(Resource):
         else:
             return {"msg": "你无权删除该资源"}, 403
 
+    @confirmed_required
     @moderator_required
     def put(self,id):
         u = User.query.get_or_404(id)

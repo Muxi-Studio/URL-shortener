@@ -31,30 +31,28 @@ spec:
           - "2"
           - wsgi:app
         env:
-          - name: XUEER_ORM_URI
-            value: "mysql://muxi:muxi304@rm-wz986q9gcfau74vi0.mysql.rds.aliyuncs.com:3306/xueer"
-          - name: C_FORCE_ROOT
-            value: "true"
-          - name: CELERY_ACCEPT_CONTENT
-            value: "json"
-          - name: REDIS1_HOST
-            value: "123.56.41.13"
-          - name: REDIS2_HOST
-            value: "123.56.41.13"
-          - name: REDIS6380PASS
-            value: "foobared6380"
-          - name: REDIS6385PASS
-            value: "foobared6385"
-          - name: REDIS3_HOST
-            value: redis1.xueer.svc.cluster.local
+          - name: APP_CONFIG
+            value: "production"
+          - name: SECRET_KEY
+            value:
+          - name: MAIL_DEFAULT_SENDER
+            value:
+          - name: MAIL_USERNAME
+            value:
+          - name: MAIL_PASSWORD
+            value:
+          - name: CELERY_BROKER_URI
+            value:
+          - name: CELERY_BACKEND_URI
+            value:
+          - name: DATABASE_ORM_URI
+            value: ""
           - name: PYTHONUNBUFFERED
             value: "1"
-          - name: X_API_KEY
-            value: "4Q6y6pmdtZBP1QeOUdehoPAJCOtj2kzk2mouVjBa"
         ports:
           - containerPort: 5488
       - name: celery
-        image: registry-internal.cn-shenzhen.aliyuncs.com/muxi/xueer_be:1.1.1
+        image: ...
         args:
           - celery
           - worker
@@ -62,19 +60,21 @@ spec:
           - app.celery_app
           - --loglevel=INFO
         env:
-          - name: XUEER_ORM_URI
-            value: "mysql://muxi:muxi304@rm-wz986q9gcfau74vi0.mysql.rds.aliyuncs.com:3306/xueer"
-          - name: C_FORCE_ROOT
-            value: "true"
-          - name: CELERY_ACCEPT_CONTENT
-            value: "json"
-          - name: REDIS1_HOST
-            value: "123.56.41.13"
-          - name: REDIS2_HOST
-            value: "123.56.41.13"
-          - name: REDIS6380PASS
-            value: "foobared6380"
-          - name: REDIS6385PASS
-            value: "foobared6385"
-          - name: REDIS3_HOST
-            value: redis1.xueer.svc.cluster.local
+          - name: APP_CONFIG
+            value: "production"
+          - name: SECRET_KEY
+            value:
+          - name: MAIL_DEFAULT_SENDER
+            value:
+          - name: MAIL_USERNAME
+            value:
+          - name: MAIL_PASSWORD
+            value:
+          - name: CELERY_BROKER_URI
+            value:
+          - name: CELERY_BACKEND_URI
+            value:
+          - name: DATABASE_ORM_URI
+            value: ""
+          - name: PYTHONUNBUFFERED
+            value: "1"
