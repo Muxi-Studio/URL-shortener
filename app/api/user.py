@@ -70,7 +70,7 @@ class UserHandlerClass(Resource):
         from app import send_mail
         args=parser.parse_args(strict=True)
         u=User(email=args["email"],password=args["password"],
-             role_id=(args["role_id"] if args["role_id"] else 2))
+             role_id=(args["role_id"] if args["role_id"] else 1))
         db.session.add(u)
         db.session.commit()
         send_mail(u.email,u,u.generate_confirmation_token())

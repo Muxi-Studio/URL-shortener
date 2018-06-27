@@ -3,94 +3,503 @@ swagger: '2.0'
 #################################INFO START##########################
 info:
   description: |
-    短链接API
+    短链接服务API
   version: 1.0.0
   title: Muxi URL Shortener
 
   contact:
-    email: 3480437308@qq.com
+    email: andrewpqc@mails.ccnu.edu.cn
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 ###############################INFO END#################################
 
 host: andrewpqc.xyz
-basePath: /api/v1.0
+basePath: /api
 schemes:
  - https
  - http
 ######################TAG START#######################################
-# tags:
-# - name: 唯一的URL
-#   description: token
-
+tags:
+  - name: auth
+    description: token
+  
+  - name: user
+    description: 用户
+  
+  - name: urlmap
+    description: URL与短码的映射
+    
+  - name: statistics
+    description: urlmap的统计信息
 
 ##########################TAG END######################################
 
 ###########################AUTH START#################################
-# securityDefinitions:
+securityDefinitions:
+  basic:
+    type: basic
+    description: 需要登录请求的api，采用basic auth的方式，即在请求头中添加Authorization字段，内容为base64.encode(“邮箱:密码”)
 
-#   basic:
-#     type: basic
-#     description: 本服务所有api均需要Basic Auth验证的保护，如果需要账户请联系Andrewpqc
-
+  token:
+    type: apiKey
+    description: 另一种鉴权的方式是token,用户先登录(采用basic auth)请求/api/token/获取token,然后在请求头中添加Authorization字段，内容为base64.encode(“token:”)
+    name: token
+    in: header
 
 ########################AUTH END######################################
 
 
 ########################PATH START####################################
 paths:
-  /get-short/:
-    post:
-      summary: 根据长连接获取短链接或自定义短链接
-      description: 
+  /token/:
+    get:
+      tags:
+      - auth
+      summary: 获取用户token
+      description: 采用basic auth方式登录获取token
       consumes:
       - application/json
       produces:
       - application/json
-      parameters:
-        - in: body
-          required: true
-          name: long_url
-          type: string
-          description: 需要转换的长连接
-        - in: body
-          description: 自定义短码(可选)
-          name: customize_short_code
-          type: string
-          required: false
       responses:
-        100:
-          description: 自定义短码已被占用
+        401:
+          description: unathorized
+        403:
+          description: auth failed
         200:
           description: OK
           schema:
             properties:
-              short_url:
+              token:
                 type: string
-                description: 短链接
-  /get-origin/:
-    post:
-      summary: 根据本服务生成的短链接来查询原始长链接
-      description: 
+      security:
+      - basic: []
+
+  /user/{id}/:
+    get:
+      tags:
+      - user
+      summary: 根据id获取用户基本信息
+      description:
       consumes:
       - application/json
       produces:
       - application/json
       parameters:
-        - in: body
-          required: true
-          name: short_url
-          type: string
-          description: 本服务生成的短链接
+      - in: path
+        name: id
+        required: true
+        description: 用户id
       responses:
         404:
-          description: 未找到记录
+          description: Not found 
         200:
           description: OK
           schema:
             properties:
-              origin_url:
+              id:
+                type: integer
+              email:
                 type: string
-                description: 原始的长链接
+              join_time:
+                type: string
+              is_confirmed:
+                type: boolean
+              role_id:
+                type: integer
+    post:
+      tags:
+      - user
+      summary: 创建用户
+      description: 创建过程中会发送一份confirm邮箱
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 请求url为/api/user/0/，这里的0为任意数字即可，只是一个占位符，所以统一写为0
+      - in: body
+        description: 请求体
+        required: true
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+              description: 用户邮箱，要求填入真实有效的邮箱，confirm时要用到
+            password:
+              type: string
+              description: 原密码经base64编码后的密码
+            role_id:
+              type: integer
+              description: 用户角色id,可选参数，如不传则默认为1,即普通用户。2,3依次为协管员，管理员
+      responses:
+        401:
+          description: 请求不合法
+        200:
+          description: OK，用户创建成功，下一步要求30分钟内验证自己的邮箱
+    
+    put:
+      tags:
+      - user
+      summary: 更新用户信息
+      description: 只有已经confirm的协管员以上权限的用户，或者是该用户本身可以更新用户信息
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需更新的用户的id
+      - in: body
+        description: 请求体
+        required: true
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+              description: 新用户邮箱，不更改邮箱可不传
+            password:
+              type: string
+              description: 新原密码经base64编码后的密码，不更改密码可不传
+      responses:
+        404:
+          description: Not Found
+        401:
+          description: 请求不合法
+        403:
+          description: 权限不足
+        200:
+          description: OK，用户更新成功
+      security:
+      - token: []
 
+    delete:
+      tags:
+      - user
+      summary: 删除账户
+      description: 只有已经confirm的管理员，或者是该用户本身可以删除账号
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需删除的用户的id
+      responses:
+        404:
+          description: Not Found
+        401:
+          description: 权限不足
+        200:
+          description: OK，删除账户成功
+      security:
+      - token: []
+
+  /user/{id}/urlmaps:
+    get:
+      tags:
+      - urlmap
+      summary: 获取某一用户的所有urlmap
+      description: 已confirm的协管员以上权限用户或者当前用户才可执行该操作
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需要获取的urlmaps所属的用户的用户id
+      responses:
+        401:
+          description: 邮箱未confirm
+        403:
+          description: 权限不够
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                long_url:
+                  type: string
+                short_code:
+                  type: string
+                inset_time:
+                  type: string
+                update_time:
+                  type: string
+                item_type:
+                  type: string
+                is_locked:
+                  type: boolean
+                count:
+                  type: integer
+                user_id:
+                  type: integer
+      security:
+      - token: []
+
+  /urlmap/{id}/:
+    get:
+      tags:
+      - urlmap
+      summary: 获取某一urlmap信息
+      description: 已confirm的用户
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需要获取的urlmaps的id
+      responses:
+        401:
+          description: 邮箱未confirm
+        404:
+          description: Not found
+        200:
+          description: OK
+          schema:
+            properties:
+              id:
+                type: integer
+              long_url:
+                type: string
+              short_code:
+                type: string
+              inset_time:
+                type: string
+              update_time:
+                type: string
+              item_type:
+                type: string
+              is_locked:
+                type: boolean
+              count:
+                type: integer
+              user_id:
+                type: integer
+      security:
+      - token: []            
+             
+    post:
+      tags:
+      - urlmap
+      summary: 创建一个urlmap
+      description: 已confirm的用户有权创建urlmap,支持自定义短码和程序生成短码。传参注意事项,long_url为必须参数，custom_short_code可选
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 请求url为/api/urlmap/0/，这里的0为任意数字即可，只是一个占位符，所以统一写为0
+      - in: body
+        description: 请求体
+        required: true
+        schema:
+          type: object
+          properties:
+            long_url:
+              type: string
+              description: 长url
+            custom_short_code:
+              type: string
+              description: 用户自定义的短码，该参数可选
+      responses:
+        401:
+          description: 邮箱未confirm
+        202:
+          description: 短码已经存在
+        200:
+          description: OK
+          schema:
+            properties:
+              id:
+                type: integer
+              long_url:
+                type: string
+              short_code:
+                type: string
+              inset_time:
+                type: string
+              update_time:
+                type: string
+              item_type:
+                type: string
+              is_locked:
+                type: boolean
+              count:
+                type: integer
+              user_id:
+                type: integer
+      security:
+      - token: []
+
+    put:
+      tags:
+      - urlmap
+      summary: 修改urlmap
+      description: 已confirm的具有协管员以上权限的用户或者当前urlmap的拥有者有权修改urlmap,支持修改原始url，加锁，加密操作。
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需要修改的urlmap的id
+      - in: body
+        description: 请求体
+        required: true
+        schema:
+          type: object
+          properties:
+            long_url:
+              type: string
+              description: 新的长url
+            password:
+              type: string
+              description: 为该urlmap添加的密码
+            lock:
+              type: boolean
+              description: 上锁和取消锁
+      responses:
+        401:
+          description: 邮箱未confirm
+        202:
+          description: 新的长url已经存在
+        403:
+          description: 权限不够
+        200:
+          description: OK
+      security:
+      - token: []
+    
+    delete:
+      tags:
+      - urlmap
+      summary: 删除urlmap
+      description: 已confirm的管理员或者当前urlmap的拥有者有权删除urlmap
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需要删除的urlmap的id
+      responses:
+        401:
+          description: 邮箱未confirm
+        404:
+          description: 未找到该urlmap
+        403:
+          description: 权限不够
+        200:
+          description: OK
+      security:
+      - token: []
+        
+  /urlmap/{id}/statistics/:
+    get:
+      tags:
+      - statistics
+      summary: 获取某一urlmap的所有统计信息
+      description: 已confirm的用户有权获取该信息
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: 需要获取的统计信息所属的urlmap的id
+      responses:
+        401:
+          description: 邮箱未confirm
+        404:
+          description: 未找到该urlmap
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                timestamp:
+                  type: string
+                useragent:
+                  type: string
+                item_type:
+                  type: string
+                ip:
+                  type: string
+      security:
+      - token: []
+
+  /statistics/:
+    get:
+      tags:
+      - statistics
+      summary: 分页获取所有statistics信息
+      description: 已confirm的具有协管员以上权限的用户有权获取该信息
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: page
+        required: false
+        description: 当前需要获取的页数，若不传，则默认为第一页
+      - in: query
+        name: per_page
+        required: false
+        description: 每页获取数据的条数，默认为20
+      responses:
+        401:
+          description: 邮箱未confirm
+        200:
+          description: OK
+          headers:
+            links:
+              type: string
+              description: 下一页和最后一页的请求地址
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                timestamp:
+                  type: string
+                useragent:
+                  type: string
+                item_type:
+                  type: string
+                ip:
+                  type: string
+      security:
+      - token: []

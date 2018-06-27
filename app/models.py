@@ -211,7 +211,7 @@ class URLMapping(db.Model):
         json_URLMap = {
             'id': self.id,
             'long_url': self.long_url,
-            'short_url': self.short_code,
+            'short_code': self.short_code,
             'insert_time':self.i_time,
             'update_time':self.u_time,
             'item_type':self.item_type,
