@@ -14,10 +14,14 @@ Its principle is to convert a decimal number into a 62-digit number.
 - URL mapping management
 
 
-## 二、功能
-
-
-## 三、API
+## API
 [https://app.swaggerhub.com/apis/andrewpqc/muxi-url-shorter/1.0.0](https://app.swaggerhub.com/apis/andrewpqc/muxi-url-shorter/1.0.0)
 
-## 四、TODO
+## TODO
+- [x] Backend
+- [ ] Frontend
+- [ ] Charge function
+
+<br>
+<br>
+<center>&copy; MuxiStudio Team</center>
