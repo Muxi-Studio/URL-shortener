@@ -2,7 +2,8 @@
 Muxi URL-shortener service (MUS). A full-featured URL shortening service. 
 Its principle is to convert a decimal number into a 62-digit number.
 
-##　Fundamental
+## Fundamental
+
 st=>start: 开始
 e=>end: 结束
 io1=>inputoutput: 输入网址
