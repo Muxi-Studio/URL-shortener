@@ -12,7 +12,7 @@
 """
 
 from functools import wraps
-from flask import abort, request, g,jsonify
+from flask import abort, request, g,jsonify,make_response
 from app.models import User,Permission
 import base64
 
@@ -106,8 +106,8 @@ def confirmed_required(f):
     """检验当前用户是否confirm"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        if g.current_user.confirmed:
+        if g.current_user.is_confirmed:
             return f(*args, **kwargs)
         else:
-            return jsonify({"msg":"need confirm you account first"}),401
+            return make_response(jsonify({"msg":"need confirm you account first"}),401)
     return decorated

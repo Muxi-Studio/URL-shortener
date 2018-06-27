@@ -60,6 +60,7 @@ class APITestCase(unittest.TestCase):
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
+
     def get_normal_header(self):
         return {
             'Accept': 'application/json',
@@ -74,7 +75,8 @@ class APITestCase(unittest.TestCase):
         u = User(
             email='admin@admin.com',
             password=b64encode(b'muxi304'),
-            role_id=2
+            role_id=3,
+            is_confirmed=True
         )
         db.session.add(u)
         db.session.commit()
@@ -97,7 +99,8 @@ class APITestCase(unittest.TestCase):
         u = User(
             email='3480437308@qq.com',
             password=b64encode(b'muxi304'),
-            role_id=3
+            role_id=1,
+            is_confirmed=True
         )
         db.session.add(u)
         db.session.commit()
@@ -151,19 +154,22 @@ class APITestCase(unittest.TestCase):
         admin = User(
             email='admin@admin.com',
             password=b64encode(b'muxi304'),
-            role_id=3
+            role_id=3,
+            is_confirmed=True
         )
 
         moderator=User(
             email='moderator@moderator.com',
             password=b64encode(b'muxi304'),
-            role_id=2
+            role_id=2,
+            is_confirmed=True
         )
 
         normal_user=User(
             email='normaluser@normaluser.com',
             password=b64encode(b'muxi304'),
-            role_id=1
+            role_id=1,
+            is_confirmed=True
         )
         db.session.add(admin)
         db.session.commit()
@@ -209,25 +215,29 @@ class APITestCase(unittest.TestCase):
         admin = User(
             email='admin@admin.com',
             password=b64encode(b'muxi304'),
-            role_id=3
+            role_id=3,
+            is_confirmed=True
         )
 
         moderator = User(
             email='moderator@moderator.com',
             password=b64encode(b'muxi304'),
-            role_id=2
+            role_id=2,
+            is_confirmed=True
         )
 
         normal_user = User(
             email='normaluser@normaluser.com',
             password=b64encode(b'muxi304'),
-            role_id=1
+            role_id=1,
+            is_confirmed=True
         )
 
         normal_user2=User(
             email='andrewpqc@mails.ccnu.edu.cn',
             password=b64encode(b'muxi304'),
-            role_id=1
+            role_id=1,
+            is_confirmed=True
         )
         db.session.add(admin)
         db.session.commit()
@@ -243,9 +253,10 @@ class APITestCase(unittest.TestCase):
                              normal_user.generate_auth_token()
                          ),
                          data=json.dumps({
-                             "long_url":"https://www.google.com/search?q=ls&oq=ls&aqs="
-                                        "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                             "long_url":"https://www.google.com/search?q=ls&oq=ls&aqs"
+                                               "=chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
                          }))
+
         self.assertTrue(res.status_code==200)
 
         res=self.client.post(url_for("api.URLmap",id=0),
@@ -253,8 +264,7 @@ class APITestCase(unittest.TestCase):
                                  normal_user.generate_auth_token()
                              ),
                              data=json.dumps({
-                                 "long_url":"https://andrewpqc.github.io/2018/04/30/"
-                                            "let-the-terminal-penetrate-the-firewall/#more",
+                                 "long_url":"https://andrewpqc.github.io/2018/04/30/let-the-terminal-penetrate-the-firewall/#more",
                                  "custom_short_code":"ABC"
                              }))
         self.assertTrue(res.status_code==200)
@@ -274,10 +284,16 @@ class APITestCase(unittest.TestCase):
         self.assertTrue(res.status_code == 200)
         self.assertTrue(len(URLMapping.query.all())==2)
 
-        res=self.client.get(url_for("api.URLmap",id=1))
+        res=self.client.get(url_for("api.URLmap",id=1),
+            headers = self.get_token_headers(
+                normal_user.generate_auth_token()
+        ))
         self.assertTrue(res.status_code==200)
 
-        res=self.client.get(url_for("api.URLmap",id=100))
+        res=self.client.get(url_for("api.URLmap",id=100),
+                            headers=self.get_token_headers(
+                                normal_user.generate_auth_token()
+                            ))
         self.assertTrue(res.status_code==404)
 
         res = self.client.put(url_for("api.URLmap", id=1),
@@ -341,7 +357,8 @@ class APITestCase(unittest.TestCase):
         normal_user = User(
             email='normaluser@normaluser.com',
             password=b64encode(b'muxi304'),
-            role_id=1
+            role_id=1,
+            is_confirmed=True
         )
 
         db.session.add(normal_user)
@@ -371,3 +388,73 @@ class APITestCase(unittest.TestCase):
         #
         # res=self.client.get(url_for('jump',short_code='ABC'))
         # self.assertTrue(res.status_code==302)
+
+    def test_add_lock_add_password(self):
+        normal_user = User(
+            email='normaluser@normaluser.com',
+            password=b64encode(b'muxi304'),
+            role_id=1,
+            is_confirmed=True
+        )
+
+        db.session.add(normal_user)
+        db.session.commit()
+
+        self.client.post(url_for("api.URLmap", id=0),
+                         headers=self.get_token_headers(
+                             normal_user.generate_auth_token()
+                         ),
+                         data=json.dumps({
+                             "long_url": "https://www.google.com/search?q=ls&oq=ls&aqs="
+                                         "chrome..69i57j0l2j69i60j0l2.1042j0j7&sourceid=chrome&ie=UTF-8"
+                         }))
+
+        self.client.post(url_for("api.URLmap", id=0),
+                         headers=self.get_token_headers(
+                             normal_user.generate_auth_token()
+                         ),
+                         data=json.dumps({
+                             "long_url": "https://andrewpqc.github.io/2018/04/30/"
+                                         "let-the-terminal-penetrate-the-firewall/#more",
+                             "custom_short_code": "ABC"
+                         }))
+
+        um = URLMapping.query.get_or_404(1)
+        self.assertTrue(um.is_locked == False)
+
+        self.client.put(url_for('api.URLmap',id=1),
+                        headers=self.get_token_headers(
+                            normal_user.generate_auth_token()
+                        ),
+                        data=json.dumps({
+                            "lock": True
+                        })
+                        )
+
+        um=URLMapping.query.get_or_404(1)
+        self.assertTrue(um.is_locked==True)
+
+        self.client.put(url_for('api.URLmap', id=1),
+                        headers=self.get_token_headers(
+                            normal_user.generate_auth_token()
+                        ),
+                        data=json.dumps({
+                            "lock": False
+                        })
+                        )
+        um = URLMapping.query.get_or_404(1)
+        self.assertTrue(um.is_locked == False)
+
+        self.assertTrue(um.password_hash is None)
+
+        self.client.put(url_for('api.URLmap', id=1),
+                        headers=self.get_token_headers(
+                            normal_user.generate_auth_token()
+                        ),
+                        data=json.dumps({
+                            "password": 'muxi304'
+                        })
+                        )
+        um = URLMapping.query.get_or_404(1)
+        self.assertTrue(um.password_hash is not None)
+        self.assertTrue(um.verify_password('muxi304'))
