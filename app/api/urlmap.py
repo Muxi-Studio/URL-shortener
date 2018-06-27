@@ -22,8 +22,8 @@ from .authentication import auth
 from utils import transform
 from app.decorators import confirmed_required
 
-@confirmed_required
 @auth.login_required
+@confirmed_required
 @api.route("/user/<int:id>/urlmaps/",methods=['GET'])
 def get_urlmaps_by_userID(id):
     u=User.query.get_or_404(id)
@@ -53,13 +53,14 @@ parser_copy.add_argument('lock',type=bool,required=False,help="上锁和取消�
 
 class URLMapHandlerClass(Resource):
 
+    @auth.login_required
     @confirmed_required
     def get(self, id):
         url_map = URLMapping.query.get_or_404(id)
         return url_map.to_json(), 200
 
-    @confirmed_required
     @auth.login_required
+    @confirmed_required
     def post(self, id):
         args = parser.parse_args(strict=True)
         short_code = args["custom_short_code"]
@@ -99,8 +100,9 @@ class URLMapHandlerClass(Resource):
                     db.session.commit()
                     return um.to_json(), 200
 
-    @confirmed_required
+
     @auth.login_required
+    @confirmed_required
     def delete(self, id):
         um = URLMapping.query.get_or_404(id)
         if (g.current_user.is_administrator()) or (g.current_user.id == um.user_id):
@@ -110,11 +112,10 @@ class URLMapHandlerClass(Resource):
         else:
             return {"msg": "你无权删除该资源"}, 403
 
-    @confirmed_required
+
     @auth.login_required
+    @confirmed_required
     def put(self, id):
-        if  not g.current_user.is_confirmed:
-            return {"msg": "please confirm your account first"}, 401
         um = URLMapping.query.get_or_404(id)
         if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == um.user_id):
             args = parser_copy.parse_args(strict=True)
@@ -129,7 +130,7 @@ class URLMapHandlerClass(Resource):
                 um.password=password
             if lock is not None:
                 um.is_locked=lock
-            um.update_time=datetime.utcnow
+            um.update_time=datetime.utcnow()
             db.session.add(um)
             db.session.commit()
             return {"msg": "URLMapping updated"}, 200

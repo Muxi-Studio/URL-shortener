@@ -13,6 +13,7 @@ GET /<short_code>/ 跳转并统计
 """
 from . import app,db
 from .forms import Form
+from datetime import datetime
 from .models import URLMapping,Statistics
 from flask import redirect,request,abort,\
     jsonify,url_for,render_template
@@ -23,6 +24,7 @@ def jump(short_code):
     if not urlmap:
         abort(404)
     urlmap.count+=1
+    urlmap.last_click_time=datetime.utcnow()
     remote_ip=request.remote_addr
     user_agent=request.headers.get("User-Agent")
     s=Statistics(ip=remote_ip,useragent=user_agent,urlmap_id=urlmap.id)

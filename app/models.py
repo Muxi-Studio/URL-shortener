@@ -81,7 +81,7 @@ class User(db.Model):
 
     @property
     def time(self):
-        time_str = str(self.insert_time)
+        time_str = str(self.timestamp)
         time = time_str[0:10]
         return time
 
@@ -177,6 +177,7 @@ class URLMapping(db.Model):
     item_type=db.Column(db.String,default="generated") #默认为generated，如果传来自定义短码则为custom
     insert_time=db.Column(db.DateTime,default=datetime.utcnow)
     update_time=db.Column(db.DateTime,default=datetime.utcnow)
+    last_click_time=db.Column(db.DateTime,default=datetime.utcnow)
     is_locked=db.Column(db.Boolean,default=False)
     password_hash=db.Column(db.String(128),nullable=True)
     count = db.Column(db.Integer, default=0)
@@ -197,6 +198,12 @@ class URLMapping(db.Model):
         return time
 
     @property
+    def l_time(self):
+        time_str = str(self.last_click_time)
+        time = time_str[0:10]
+        return time
+
+    @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
 
@@ -211,12 +218,12 @@ class URLMapping(db.Model):
         json_URLMap = {
             'id': self.id,
             'long_url': self.long_url,
-            'short_url': self.short_code,
+            'short_code': self.short_code,
             'insert_time':self.i_time,
             'update_time':self.u_time,
+            'last_click_time':self.l_time,
             'item_type':self.item_type,
             'is_locked':self.is_locked,
-            'password':self.password,
             'count':self.count,
             'user_id':self.user_id
         }
