@@ -1,4 +1,6 @@
 # [URL-shortener](https://github.com/Muxi-Studio/URL-shortener)
+[![Build Status](https://travis-ci.org/Andrewpqc/URL-shortener.svg?branch=master)](https://travis-ci.org/Andrewpqc/URL-shortener)
+
 Muxi URL-shortener service (MUS). A full-featured URL shortening service. 
 Its principle is to convert a decimal number into a 62-digit number.
 
