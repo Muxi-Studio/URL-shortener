@@ -20,7 +20,7 @@ Its principle is to convert a decimal number into a 62-digit number.
 ## TODO
 - [x] Backend
 - [ ] Frontend
-- [ ] Charge function
+- [ ] Account upgrades and charges
 
 <br>
 <br>

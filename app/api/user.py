@@ -76,8 +76,9 @@ class UserHandlerClass(Resource):
         send_mail(u.email,u,u.generate_confirmation_token())
         return {"msg":"user created and email send!"},200
 
-    @confirmed_required
+
     @auth.login_required
+    @confirmed_required
     def delete(self,id):
         u=User.query.get_or_404(id)
         if (g.current_user.is_administrator()) or (g.current_user.id == u.id):
@@ -87,8 +88,9 @@ class UserHandlerClass(Resource):
         else:
             return {"msg": "你无权删除该资源"}, 403
 
-    @confirmed_required
+
     @moderator_required
+    @confirmed_required
     def put(self,id):
         u = User.query.get_or_404(id)
         if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == u.id):
