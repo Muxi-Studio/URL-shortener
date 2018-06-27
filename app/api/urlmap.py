@@ -113,8 +113,6 @@ class URLMapHandlerClass(Resource):
     @confirmed_required
     @auth.login_required
     def put(self, id):
-        if  not g.current_user.is_confirmed:
-            return {"msg": "please confirm your account first"}, 401
         um = URLMapping.query.get_or_404(id)
         if (g.current_user.can(Permission.MODERATE_COMMENTS)) or (g.current_user.id == um.user_id):
             args = parser_copy.parse_args(strict=True)
