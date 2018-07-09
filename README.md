@@ -23,6 +23,9 @@ Its principle is to convert a decimal number into a 62-digit number.
 - [x] Backend
 - [ ] Frontend
 - [ ] Account upgrades and charges
+- [ ] Distributed Storage
+
+
 
 <br>
 <br>
